@@ -44,15 +44,15 @@ port
     do_out          : out  STD_LOGIC_VECTOR (15 downto 0);   -- Output data bus for dynamic reconfiguration port
     drdy_out        : out  STD_LOGIC;                        -- Data ready signal for the dynamic reconfiguration port
     dclk_in         : in  STD_LOGIC;                         -- Clock input for the dynamic reconfiguration port
-    vauxp0          : in  STD_LOGIC;                         -- Auxiliary Channel 0
-    vauxn0          : in  STD_LOGIC;
-    vauxp8          : in  STD_LOGIC;                         -- Auxiliary Channel 8
-    vauxn8          : in  STD_LOGIC;
+    --vauxp0          : in  STD_LOGIC;                         -- Auxiliary Channel 0
+    --vauxn0          : in  STD_LOGIC;
+   -- vauxp8          : in  STD_LOGIC;                         -- Auxiliary Channel 8
+    --vauxn8          : in  STD_LOGIC;
     busy_out        : out  STD_LOGIC;                        -- ADC Busy signal
     channel_out     : out  STD_LOGIC_VECTOR (4 downto 0);    -- Channel Selection Outputs
     eoc_out         : out  STD_LOGIC;                        -- End of Conversion Signal
     eos_out         : out  STD_LOGIC;                        -- End of Sequence Signal
-    alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
+   -- alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
     muxaddr_out     : out STD_LOGIC_VECTOR(4 downto 0); 
     vp_in           : in  STD_LOGIC;                         -- Dedicated Analog Input Pair
     vn_in           : in  STD_LOGIC;
@@ -68,63 +68,63 @@ architecture Behavioral of voltages is
 
  signal FLOAT_VCCAUX_ALARM : std_logic;
   signal FLOAT_VCCINT_ALARM : std_logic;
-  signal FLOAT_USER_TEMP_ALARM : std_logic;
-  signal FLOAT_VBRAM_ALARM : std_logic;
+ -- signal FLOAT_USER_TEMP_ALARM : std_logic;
+ -- signal FLOAT_VBRAM_ALARM : std_logic;
   signal aux_channel_p : std_logic_vector (15 downto 0);
   signal aux_channel_n : std_logic_vector (15 downto 0);
-  signal alm_int : std_logic_vector (7 downto 0);
+ -- signal alm_int : std_logic_vector (7 downto 0);
   
 begin
 
- alarm_out <= alm_int(7);
+ --alarm_out <= alm_int(7);
 
-        aux_channel_p(0) <= vauxp0;
-        aux_channel_n(0) <= vauxn0;
+       -- aux_channel_p(0) <= '0';
+       -- aux_channel_n(0) <= '0';
 
-        aux_channel_p(1) <= '0';
-        aux_channel_n(1) <= '0';
+       -- aux_channel_p(1) <= '0';
+       -- aux_channel_n(1) <= '0';
 
-        aux_channel_p(2) <= '0';
-        aux_channel_n(2) <= '0';
+       -- aux_channel_p(2) <= '0';
+       -- aux_channel_n(2) <= '0';
 
-        aux_channel_p(3) <= '0';
-        aux_channel_n(3) <= '0';
+       -- aux_channel_p(3) <= '0';
+       -- aux_channel_n(3) <= '0';
 
-        aux_channel_p(4) <= '0';
-        aux_channel_n(4) <= '0';
+     --   aux_channel_p(4) <= '0';
+     --   aux_channel_n(4) <= '0';
 
-        aux_channel_p(5) <= '0';
-        aux_channel_n(5) <= '0';
+     --   aux_channel_p(5) <= '0';
+    --    aux_channel_n(5) <= '0';
 
-        aux_channel_p(6) <= '0';
-        aux_channel_n(6) <= '0';
+     --   aux_channel_p(6) <= '0';
+      --  aux_channel_n(6) <= '0';
 
-        aux_channel_p(7) <= '0';
-        aux_channel_n(7) <= '0';
+     --   aux_channel_p(7) <= '0';
+      --  aux_channel_n(7) <= '0';
 
-        aux_channel_p(8) <= vauxp8;
-        aux_channel_n(8) <= vauxn8;
+     --   aux_channel_p(8) <= '0';
+       -- aux_channel_n(8) <= '0';
 
-        aux_channel_p(9) <= '0';
-        aux_channel_n(9) <= '0';
+    --    aux_channel_p(9) <= '0';
+      --  aux_channel_n(9) <= '0';
 
-        aux_channel_p(10) <= '0';
-        aux_channel_n(10) <= '0';
+     --   aux_channel_p(10) <= '0';
+     --   aux_channel_n(10) <= '0';
 
-        aux_channel_p(11) <= '0';
-        aux_channel_n(11) <= '0';
+     --   aux_channel_p(11) <= '0';
+      --  aux_channel_n(11) <= '0';
 
-        aux_channel_p(12) <= '0';
-        aux_channel_n(12) <= '0';
+   --     aux_channel_p(12) <= '0';
+     --   aux_channel_n(12) <= '0';
 
-        aux_channel_p(13) <= '0';
-        aux_channel_n(13) <= '0';
+    --    aux_channel_p(13) <= '0';
+     --   aux_channel_n(13) <= '0';
 
-        aux_channel_p(14) <= '0';
-        aux_channel_n(14) <= '0';
+     --   aux_channel_p(14) <= '0';
+      --  aux_channel_n(14) <= '0';
 
-        aux_channel_p(15) <= '0';
-        aux_channel_n(15) <= '0';
+      --  aux_channel_p(15) <= '0';
+      --  aux_channel_n(15) <= '0';
 
  U0 : XADC
      generic map(
@@ -164,7 +164,6 @@ port map (
         RESET               => '0',
         VAUXN(15 downto 0)  => aux_channel_n(15 downto 0),
         VAUXP(15 downto 0)  => aux_channel_p(15 downto 0),
-        ALM                 => alm_int,
         BUSY                => busy_out,
         CHANNEL(4 downto 0) => channel_out(4 downto 0),
         DO(15 downto 0)     => do_out(15 downto 0),
@@ -181,9 +180,27 @@ port map (
         
          
          );
+        process(dclk_in)
+        variable tempMeasuredHigh : std_logic;
+        variable tempMeasuredLow : std_logic;
+        begin
         
-       measurement <= vp_in;
-       measured <= measurement;
+        if rising_edge (dclk_in) then
+           aux_channel_p <= di_in;
+           tempMeasuredHigh := '1';
+           end if;
+           
+           if falling_edge (dclk_in) then
+           aux_channel_n <= di_in;
+           tempMeasuredLow := '0';
+           end if;
+           
+           measurement <= di_in(0) and di_in(1) and di_in(1) and di_in(3) and di_in(4) and di_in(5) and di_in(6) and di_in(7) and di_in(8) and di_in(9) and di_in(10) and  di_in(11) and di_in(12) and di_in(13) and di_in(14) and di_in(15);
+           measured <= tempMeasuredHigh or tempMeasuredLow;
+           
+           end process;
+        
+        
    
 
 end Behavioral;
