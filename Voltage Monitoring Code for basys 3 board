@@ -1,22 +1,3 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 11/02/2025 01:18:37 PM
--- Design Name: 
--- Module Name: voltages - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
 
 
 library ieee;
@@ -37,23 +18,21 @@ use UNISIM.VCOMPONENTS.ALL;
 entity voltages is
 port
    (
-     daddr_in        : in  STD_LOGIC_VECTOR (6 downto 0);     -- Address bus for the dynamic reconfiguration port
+    daddr_in        : in  STD_LOGIC_VECTOR (6 downto 0);     -- Address bus for the dynamic reconfiguration port
     den_in          : in  STD_LOGIC;                         -- Enable Signal for the dynamic reconfiguration port
     di_in           : in  STD_LOGIC_VECTOR (15 downto 0);    -- Input data bus for the dynamic reconfiguration port
     dwe_in          : in  STD_LOGIC;                         -- Write Enable for the dynamic reconfiguration port
     do_out          : out  STD_LOGIC_VECTOR (15 downto 0);   -- Output data bus for dynamic reconfiguration port
     drdy_out        : out  STD_LOGIC;                        -- Data ready signal for the dynamic reconfiguration port
     dclk_in         : in  STD_LOGIC;                         -- Clock input for the dynamic reconfiguration port
-    --vauxp0          : in  STD_LOGIC;                         -- Auxiliary Channel 0
-    --vauxn0          : in  STD_LOGIC;
-   -- vauxp8          : in  STD_LOGIC;                         -- Auxiliary Channel 8
-    --vauxn8          : in  STD_LOGIC;
+    vauxp0          : in  STD_LOGIC;                         -- Auxiliary Channel 0
+    vauxn0          : in  STD_LOGIC;
     busy_out        : out  STD_LOGIC;                        -- ADC Busy signal
     channel_out     : out  STD_LOGIC_VECTOR (4 downto 0);    -- Channel Selection Outputs
     eoc_out         : out  STD_LOGIC;                        -- End of Conversion Signal
     eos_out         : out  STD_LOGIC;                        -- End of Sequence Signal
    -- alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
-    muxaddr_out     : out STD_LOGIC_VECTOR(4 downto 0); 
+   -- muxaddr_out     : out STD_LOGIC_VECTOR(4 downto 0); 
     vp_in           : in  STD_LOGIC;                         -- Dedicated Analog Input Pair
     vn_in           : in  STD_LOGIC;
     measurement     : inout STD_LOGIC;
@@ -66,13 +45,15 @@ architecture Behavioral of voltages is
   attribute CORE_GENERATION_INFO of Behavioral : architecture is "xadc_wiz_0,xadc_wiz_v3_3_11,{component_name=xadc_wiz_0,enable_axi=false,enable_axi4stream=false,dclk_frequency=100,enable_busy=true,enable_convst=false,enable_convstclk=false,enable_dclk=true,enable_drp=true,enable_eoc=true,enable_eos=true,enable_vbram_alaram=false,enable_vccddro_alaram=false,enable_Vccint_Alaram=false,enable_Vccaux_alaram=falseenable_vccpaux_alaram=false,enable_vccpint_alaram=false,ot_alaram=false,user_temp_alaram=false,timing_mode=continuous,channel_averaging=None,sequencer_mode=on,startup_channel_selection=simultaneous_sampling}";
 
 
- signal FLOAT_VCCAUX_ALARM : std_logic;
-  signal FLOAT_VCCINT_ALARM : std_logic;
+ --signal FLOAT_VCCAUX_ALARM : std_logic;
+  --signal FLOAT_VCCINT_ALARM : std_logic;
  -- signal FLOAT_USER_TEMP_ALARM : std_logic;
- -- signal FLOAT_VBRAM_ALARM : std_logic;
+  --signal FLOAT_VBRAM_ALARM : std_logic;
   signal aux_channel_p : std_logic_vector (15 downto 0);
   signal aux_channel_n : std_logic_vector (15 downto 0);
- -- signal alm_int : std_logic_vector (7 downto 0);
+  signal alm_int : std_logic_vector (7 downto 0);
+  
+  
   
 begin
 
@@ -129,32 +110,32 @@ begin
  U0 : XADC
      generic map(
         INIT_40 => X"0810", -- config reg 0
-        INIT_41 => X"410F", -- config reg 1
+        INIT_41 => X"21AF", -- config reg 1
         INIT_42 => X"0400", -- config reg 2
-        INIT_48 => X"0800", -- Sequencer channel selection
-        INIT_49 => X"0001", -- Sequencer channel selection
-        INIT_4A => X"0000", -- Sequencer Average selection
-        INIT_4B => X"0000", -- Sequencer Average selection
-        INIT_4C => X"0800", -- Sequencer Bipolar selection
-        INIT_4D => X"0000", -- Sequencer Bipolar selection
-        INIT_4E => X"0000", -- Sequencer Acq time selection
-        INIT_4F => X"0000", -- Sequencer Acq time selection
-        INIT_50 => X"B5ED", -- Temp alarm trigger
-        INIT_51 => X"57E4", -- Vccint upper alarm limit
-        INIT_52 => X"A147", -- Vccaux upper alarm limit
-        INIT_53 => X"CA33",  -- Temp alarm OT upper
-        INIT_54 => X"A93A", -- Temp alarm reset
-        INIT_55 => X"52C6", -- Vccint lower alarm limit
-        INIT_56 => X"9555", -- Vccaux lower alarm limit
-        INIT_57 => X"AE4E",  -- Temp alarm OT reset
-        INIT_58 => X"5999",  -- Vccbram upper alarm limit
-        INIT_5C => X"5111",  -- Vccbram lower alarm limit
+      --  INIT_48 => X"0800", -- Sequencer channel selection
+      --  INIT_49 => X"0000", -- Sequencer channel selection
+      --  INIT_4A => X"0000", -- Sequencer Average selection
+      --  INIT_4B => X"0000", -- Sequencer Average selection
+      --  INIT_4C => X"0000", -- Sequencer Bipolar selection
+      --  INIT_4D => X"0000", -- Sequencer Bipolar selection
+       -- INIT_4E => X"0000", -- Sequencer Acq time selection
+      --  INIT_4F => X"0000", -- Sequencer Acq time selection
+       -- INIT_50 => X"B5ED", -- Temp alarm trigger
+        --INIT_51 => X"57E4", -- Vccint upper alarm limit
+       -- INIT_52 => X"A147", -- Vccaux upper alarm limit
+       -- INIT_53 => X"CA33",  -- Temp alarm OT upper
+       -- INIT_54 => X"A93A", -- Temp alarm reset
+      --  INIT_55 => X"52C6", -- Vccint lower alarm limit
+       -- INIT_56 => X"9555", -- Vccaux lower alarm limit
+       -- INIT_57 => X"AE4E",  -- Temp alarm OT reset
+       -- INIT_58 => X"5999",  -- Vccbram upper alarm limit
+      --  INIT_5C => X"5111",  -- Vccbram lower alarm limit
         SIM_DEVICE => "7SERIES",
         SIM_MONITOR_FILE => "design.txt"
         )
 
 port map (
-        CONVST              => '0',
+         CONVST              => '0',
         CONVSTCLK           => '0',
         DADDR(6 downto 0)   => daddr_in(6 downto 0),
         DCLK                => dclk_in,
@@ -164,6 +145,7 @@ port map (
         RESET               => '0',
         VAUXN(15 downto 0)  => aux_channel_n(15 downto 0),
         VAUXP(15 downto 0)  => aux_channel_p(15 downto 0),
+        ALM                 => alm_int,
         BUSY                => busy_out,
         CHANNEL(4 downto 0) => channel_out(4 downto 0),
         DO(15 downto 0)     => do_out(15 downto 0),
@@ -174,7 +156,7 @@ port map (
         JTAGLOCKED          => open,
         JTAGMODIFIED        => open,
         OT                  => open,
-        MUXADDR             => muxaddr_out,
+       -- MUXADDR             => muxaddr_out,
         VN                  => vn_in,
         VP                  => vp_in
         
@@ -182,21 +164,21 @@ port map (
          );
         process(dclk_in)
         variable tempMeasuredHigh : std_logic;
-        variable tempMeasuredLow : std_logic;
+        --variable tempMeasuredLow : std_logic;
         begin
         
         if rising_edge (dclk_in) then
-           aux_channel_p <= di_in;
            tempMeasuredHigh := '1';
            end if;
            
-           if falling_edge (dclk_in) then
-           aux_channel_n <= di_in;
-           tempMeasuredLow := '0';
-           end if;
+           --if falling_edge (dclk_in) then
+           --aux_channel_n <= di_in;
+           --tempMeasuredLow := '0';
+          -- end if;
            
-           measurement <= di_in(0) and di_in(1) and di_in(1) and di_in(3) and di_in(4) and di_in(5) and di_in(6) and di_in(7) and di_in(8) and di_in(9) and di_in(10) and  di_in(11) and di_in(12) and di_in(13) and di_in(14) and di_in(15);
-           measured <= tempMeasuredHigh or tempMeasuredLow;
+           measurement <= di_in(0) and di_in(1) and di_in(1) and di_in(3) and di_in(4) and di_in(5) and di_in(6) and di_in(7) and di_in(8) and di_in(9) and di_in(10) and di_in(11) and di_in(12) and di_in(13) and di_in(14) and di_in(15);
+           
+           measured <= tempMeasuredHigh;
            
            end process;
         
