@@ -19,6 +19,7 @@ use ieee.numeric_std.all;
 Library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 
+
 entity voltageMon is
   Port (
     daddr_in        : in  STD_LOGIC_VECTOR (6 downto 0);     -- Address bus for the dynamic reconfiguration port
@@ -165,9 +166,18 @@ port map (
 monitor : process(dclk_in)
 begin
 if (rising_edge(dclk_in) and (den_in = '1')) then
-    do_out(0) <= vp_in;
- 
-end if;
+    if (vn_in < vp_in) then
+       do_out(0) <= daddr_in(0);
+       do_out(1) <= daddr_in(1);
+       do_out(2) <= daddr_in(2);
+       do_out(3) <= daddr_in(3);
+       do_out(4) <= daddr_in(4);
+       do_out(5) <= daddr_in(5);
+       do_out(6) <= daddr_in(6);
+        end if;
+    end if;
 end process monitor;
+
+  
 
 end Behavioral;
