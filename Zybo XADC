@@ -30,11 +30,12 @@ entity voltageMon is
     drdy_out        : out  STD_LOGIC;                        -- Data ready signal for the dynamic reconfiguration port
     dclk_in         : in  STD_LOGIC;                         -- Clock input for the dynamic reconfiguration port
     reset_in        : in  STD_LOGIC;                         -- Reset signal for the System Monitor control logic
+    vauxp0          : in  STD_LOGIC;                         -- Auxiliary Channel 0
+    vauxn0          : in  STD_LOGIC;
     busy_out        : out  STD_LOGIC;                        -- ADC Busy signal
     channel_out     : out  STD_LOGIC_VECTOR (4 downto 0);    -- Channel Selection Outputs
     eoc_out         : out  STD_LOGIC;                        -- End of Conversion Signal
     eos_out         : out  STD_LOGIC;                        -- End of Sequence Signal
-    vccint_alarm_out : out  STD_LOGIC;                        -- VCCINT-sensor alarm output
     alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
     vp_in           : in  STD_LOGIC;                         -- Dedicated Analog Input Pair
     vn_in           : in  STD_LOGIC
@@ -43,7 +44,10 @@ end voltageMon;
 
 architecture Behavioral of voltageMon is
 
+
+
   signal FLOAT_VCCAUX_ALARM : std_logic;
+  signal FLOAT_VCCINT_ALARM : std_logic;
   signal FLOAT_USER_TEMP_ALARM : std_logic;
   signal FLOAT_VBRAM_ALARM : std_logic;
   signal FLOAT_MUXADDR : std_logic_vector (4 downto 0);
@@ -51,12 +55,13 @@ architecture Behavioral of voltageMon is
   signal aux_channel_n : std_logic_vector (15 downto 0);
   signal alm_int : std_logic_vector (7 downto 0);
   
+  
 begin
- alarm_out <= alm_int(7);
-       vccint_alarm_out <= alm_int(1);
 
-        aux_channel_p(0) <= '0';
-        aux_channel_n(0) <= '0';
+  alarm_out <= alm_int(7);
+
+        aux_channel_p(0) <= vauxp0;
+        aux_channel_n(0) <= vauxn0;
 
         aux_channel_p(1) <= '0';
         aux_channel_n(1) <= '0';
@@ -105,15 +110,15 @@ begin
 
  U0 : XADC
      generic map(
-        INIT_40 => X"0403", -- config reg 0
-        INIT_41 => X"31AB", -- config reg 1
+        INIT_40 => X"0000", -- config reg 0
+        INIT_41 => X"21AF", -- config reg 1
         INIT_42 => X"0400", -- config reg 2
-        INIT_48 => X"0100", -- Sequencer channel selection
-        INIT_49 => X"0000", -- Sequencer channel selection
+        INIT_48 => X"0800", -- Sequencer channel selection
+        INIT_49 => X"0001", -- Sequencer channel selection
         INIT_4A => X"0000", -- Sequencer Average selection
         INIT_4B => X"0000", -- Sequencer Average selection
         INIT_4C => X"0000", -- Sequencer Bipolar selection
-        INIT_4D => X"0000", -- Sequencer Bipolar selection
+        INIT_4D => X"0001", -- Sequencer Bipolar selection
         INIT_4E => X"0000", -- Sequencer Acq time selection
         INIT_4F => X"0000", -- Sequencer Acq time selection
         INIT_50 => X"B5ED", -- Temp alarm trigger
@@ -163,18 +168,16 @@ port map (
         VN                  => vn_in,
         VP                  => vp_in
          );
-monitor : process(dclk_in)
+
+monitor : process(dclk_in, den_in, daddr_in)
 begin
 if (rising_edge(dclk_in) and (den_in = '1')) then
-    if (vn_in < vp_in) then
-       do_out(0) <= daddr_in(0);
-       do_out(1) <= daddr_in(1);
-       do_out(2) <= daddr_in(2);
-       do_out(3) <= daddr_in(3);
-       do_out(4) <= daddr_in(4);
-       do_out(5) <= daddr_in(5);
-       do_out(6) <= daddr_in(6);
-        end if;
+      
+      while(daddr_in = x"1")loop
+       do_out <= daddr_in;
+       end loop;
+     
+       
     end if;
 end process monitor;
 
