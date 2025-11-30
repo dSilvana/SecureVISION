@@ -1,27 +1,20 @@
 
 
 
---library IEEE;
---use IEEE.STD_LOGIC_1164.ALL;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+library UNISIM;
+use UNISIM.VComponents.all;
 
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-Library UNISIM;
-use UNISIM.VCOMPONENTS.ALL;
-
-
-entity voltageMon is
-  Port (
+entity volt_mon is
+  Port ( 
     daddr_in        : in  STD_LOGIC_VECTOR (6 downto 0);     -- Address bus for the dynamic reconfiguration port
     den_in          : in  STD_LOGIC;                         -- Enable Signal for the dynamic reconfiguration port
     di_in           : in  STD_LOGIC_VECTOR (15 downto 0);    -- Input data bus for the dynamic reconfiguration port
@@ -29,24 +22,27 @@ entity voltageMon is
     do_out          : out  STD_LOGIC_VECTOR (15 downto 0);   -- Output data bus for dynamic reconfiguration port
     drdy_out        : out  STD_LOGIC;                        -- Data ready signal for the dynamic reconfiguration port
     dclk_in         : in  STD_LOGIC;                         -- Clock input for the dynamic reconfiguration port
-    reset_in        : in  STD_LOGIC;                         -- Reset signal for the System Monitor control logic
     vauxp0          : in  STD_LOGIC;                         -- Auxiliary Channel 0
     vauxn0          : in  STD_LOGIC;
     busy_out        : out  STD_LOGIC;                        -- ADC Busy signal
-    channel_out     : out  STD_LOGIC_VECTOR (4 downto 0);    -- Channel Selection Outputs
+    --channel_out     : out  STD_LOGIC_VECTOR (4 downto 0);    -- Channel Selection Outputs
     eoc_out         : out  STD_LOGIC;                        -- End of Conversion Signal
     eos_out         : out  STD_LOGIC;                        -- End of Sequence Signal
+    vccaux_alarm_out : out  STD_LOGIC;                        -- VCCAUX-sensor alarm output
     alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
     vp_in           : in  STD_LOGIC;                         -- Dedicated Analog Input Pair
-    vn_in           : in  STD_LOGIC
-   );
-end voltageMon;
+    vn_in           : in  STD_LOGIC;
+    notUsed         : out std_logic
+    --measurement     : out std_logic
+  );
+end volt_mon;
 
-architecture Behavioral of voltageMon is
+architecture Behavioral of volt_mon is
+
+  attribute CORE_GENERATION_INFO : string;
+  --attribute CORE_GENERATION_INFO of AMD : architecture is "xadc_wiz_0,xadc_wiz_v3_3_11,{component_name=xadc_wiz_0,enable_axi=false,enable_axi4stream=false,dclk_frequency=100,enable_busy=true,enable_convst=false,enable_convstclk=false,enable_dclk=true,enable_drp=true,enable_eoc=true,enable_eos=true,enable_vbram_alaram=false,enable_vccddro_alaram=false,enable_Vccint_Alaram=false,enable_Vccaux_alaram=trueenable_vccpaux_alaram=false,enable_vccpint_alaram=false,ot_alaram=false,user_temp_alaram=false,timing_mode=continuous,channel_averaging=None,sequencer_mode=on,startup_channel_selection=contineous_sequence}";
 
 
-
-  signal FLOAT_VCCAUX_ALARM : std_logic;
   signal FLOAT_VCCINT_ALARM : std_logic;
   signal FLOAT_USER_TEMP_ALARM : std_logic;
   signal FLOAT_VBRAM_ALARM : std_logic;
@@ -56,9 +52,10 @@ architecture Behavioral of voltageMon is
   signal alm_int : std_logic_vector (7 downto 0);
   
   
-begin
 
-  alarm_out <= alm_int(7);
+begin
+ alarm_out <= alm_int(7);
+       vccaux_alarm_out <= alm_int(2);
 
         aux_channel_p(0) <= vauxp0;
         aux_channel_n(0) <= vauxn0;
@@ -111,9 +108,9 @@ begin
  U0 : XADC
      generic map(
         INIT_40 => X"0000", -- config reg 0
-        INIT_41 => X"21AF", -- config reg 1
+        INIT_41 => X"21A7", -- config reg 1
         INIT_42 => X"0400", -- config reg 2
-        INIT_48 => X"0800", -- Sequencer channel selection
+        INIT_48 => X"0000", -- Sequencer channel selection
         INIT_49 => X"0001", -- Sequencer channel selection
         INIT_4A => X"0000", -- Sequencer Average selection
         INIT_4B => X"0000", -- Sequencer Average selection
@@ -149,12 +146,12 @@ port map (
         DEN                 => den_in,
         DI(15 downto 0)     => di_in(15 downto 0),
         DWE                 => dwe_in,
-        RESET               => reset_in,
+        RESET               => '0',
         VAUXN(15 downto 0)  => aux_channel_n(15 downto 0),
         VAUXP(15 downto 0)  => aux_channel_p(15 downto 0),
         ALM                 => alm_int,
         BUSY                => busy_out,
-        CHANNEL(4 downto 0) => channel_out(4 downto 0),
+        --CHANNEL(4 downto 0) => channel_out(4 downto 0),
         DO(15 downto 0)     => do_out(15 downto 0),
         DRDY                => drdy_out,
         EOC                 => eoc_out,
@@ -169,18 +166,41 @@ port map (
         VP                  => vp_in
          );
 
+
 monitor : process(dclk_in, den_in, daddr_in)
+
 begin
+
 if (rising_edge(dclk_in) and (den_in = '1')) then
-      
-      while(daddr_in = x"1")loop
-       do_out <= daddr_in;
-       end loop;
-     
+ 
+       if (daddr_in = x"10") then
        
+       do_out(0) <= '0';
+       do_out(1) <= '0';
+       do_out(2) <= '0';
+       do_out(3) <= '0';
+       do_out(4) <= '0';
+       do_out(5) <= '0';
+       do_out(6) <= '0';
+       do_out(7) <= '0';
+       do_out(8) <= '0';
+       do_out(9) <= daddr_in(0);
+       do_out(10) <= daddr_in(1);
+       do_out(11) <= daddr_in(2);
+       do_out(12) <= daddr_in(3);
+       do_out(13) <= daddr_in(4);
+       do_out(14) <= daddr_in(5);
+       do_out(15) <= daddr_in(6);
+       
+       
+       drdy_out <= '1';
+ 
     end if;
+   end if;
+
+
 end process monitor;
 
-  
+notUsed <= dwe_in and di_in(0) and di_in(1) and di_in(2) and di_in(3) and di_in(4) and di_in(5) and di_in(6) and di_in(7) and di_in(8) and di_in(9) and di_in(10) and di_in(11) and di_in(12) and di_in(13) and di_in(14) and di_in(15);
 
 end Behavioral;
