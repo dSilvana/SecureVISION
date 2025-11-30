@@ -27,13 +27,11 @@ entity volt_mon is
     busy_out        : out  STD_LOGIC;                        -- ADC Busy signal
     --channel_out     : out  STD_LOGIC_VECTOR (4 downto 0);    -- Channel Selection Outputs
     eoc_out         : out  STD_LOGIC;                        -- End of Conversion Signal
-    eos_out         : out  STD_LOGIC;                        -- End of Sequence Signal
+   -- eos_out         : out  STD_LOGIC;                        -- End of Sequence Signal
     vccaux_alarm_out : out  STD_LOGIC;                        -- VCCAUX-sensor alarm output
-    alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
+    --alarm_out       : out STD_LOGIC;                         -- OR'ed output of all the Alarms
     vp_in           : in  STD_LOGIC;                         -- Dedicated Analog Input Pair
-    vn_in           : in  STD_LOGIC;
-    notUsed         : out std_logic
-    --measurement     : out std_logic
+    vn_in           : in  STD_LOGIC
   );
 end volt_mon;
 
@@ -49,12 +47,10 @@ architecture Behavioral of volt_mon is
   signal FLOAT_MUXADDR : std_logic_vector (4 downto 0);
   signal aux_channel_p : std_logic_vector (15 downto 0);
   signal aux_channel_n : std_logic_vector (15 downto 0);
-  signal alm_int : std_logic_vector (7 downto 0);
-  
-  
+  signal alm_int : std_logic_vector (7 downto 0);  
 
 begin
- alarm_out <= alm_int(7);
+-- alarm_out <= alm_int(7);
        vccaux_alarm_out <= alm_int(2);
 
         aux_channel_p(0) <= vauxp0;
@@ -141,11 +137,11 @@ begin
 port map (
         CONVST              => '0',
         CONVSTCLK           => '0',
-        DADDR(6 downto 0)   => daddr_in(6 downto 0),
+        DADDR(6 downto 0)   => "0010000",
         DCLK                => dclk_in,
-        DEN                 => den_in,
-        DI(15 downto 0)     => di_in(15 downto 0),
-        DWE                 => dwe_in,
+        DEN                 => '1',
+        DI(15 downto 0)     => "0000000000000000",
+        DWE                 => '0',
         RESET               => '0',
         VAUXN(15 downto 0)  => aux_channel_n(15 downto 0),
         VAUXP(15 downto 0)  => aux_channel_p(15 downto 0),
@@ -155,7 +151,7 @@ port map (
         DO(15 downto 0)     => do_out(15 downto 0),
         DRDY                => drdy_out,
         EOC                 => eoc_out,
-        EOS                 => eos_out,
+       -- EOS                 => eos_out,
         JTAGBUSY            => open,
         JTAGLOCKED          => open,
         JTAGMODIFIED        => open,
@@ -167,13 +163,13 @@ port map (
          );
 
 
-monitor : process(dclk_in, den_in, daddr_in)
+monitor : process(dclk_in)
 
 begin
 
 if (rising_edge(dclk_in) and (den_in = '1')) then
  
-       if (daddr_in = x"10") then
+      if (daddr_in = x"10") then
        
        do_out(0) <= '0';
        do_out(1) <= '0';
@@ -196,11 +192,15 @@ if (rising_edge(dclk_in) and (den_in = '1')) then
        drdy_out <= '1';
  
     end if;
+
+     
    end if;
+
+
+       
 
 
 end process monitor;
 
-notUsed <= dwe_in and di_in(0) and di_in(1) and di_in(2) and di_in(3) and di_in(4) and di_in(5) and di_in(6) and di_in(7) and di_in(8) and di_in(9) and di_in(10) and di_in(11) and di_in(12) and di_in(13) and di_in(14) and di_in(15);
 
 end Behavioral;
