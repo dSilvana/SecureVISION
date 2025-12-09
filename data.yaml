@@ -1,6 +1,0 @@
-# SecureVISION dataset (YOLOv5)
-train: /Users/benbartelt/SecureVISION/datasets/securevision/images/train
-val:   /Users/benbartelt/SecureVISION/datasets/securevision/images/val
-
-nc: 5
-names: [person, cup, ball, pen, pencil]
