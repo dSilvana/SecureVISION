@@ -30,8 +30,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity Top_Glitch_Detection is
   Port ( clk : in std_logic; -- board clock
-        vauxp0 : in std_logic; -- JA board pin N16
-        vauxn0 : in std_logic -- JA board pin N15
+        vauxp0 : in std_logic; -- JA board pin N16 (external auxiliary analog input)
+        vauxn0 : in std_logic; -- JA board pin N15 (external auxiliary analog input)
         alarm : out std_logic --LED pin for glitch alarm
         );
 end Top_Glitch_Detection;
@@ -63,8 +63,8 @@ begin
               drdy_out => drdy_out,
               vauxp0 => vauxp0,
               vauxn0 => vauxn0,
-              vp_in => '0',
-              vn_in => '0',
+              vp_in => '0', -- internal positive input terminal
+              vn_in => '0', -- internal negative input terminal
               reset_in => '0',
               
               busy_out => open,
@@ -90,7 +90,7 @@ begin
             
             
      -- normal code about 3276 = 0xCCC
-     -- low threshold ? 2948 = 0xB84
+     -- low threshold  2948 = 0xB84
      -- Over voltage threshold 3604 = 0xE14
             
     -- Check to see if value is outside of allowed range and set up flags
@@ -107,6 +107,7 @@ begin
                 else
                     over_voltage <= '0';
                     under_voltage <= '0';
+                    alarm <= '0';
                     
                 end if;
             end if;
