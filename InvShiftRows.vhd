@@ -31,45 +31,38 @@ use work.aes_package.all;
 
 entity InvShiftRows is
   Port (
-     state_bytes : in block_state_type; -- Incoming bytes array
-     next_state_bytes : out block_state_type --Outgoing bytes array
+     sr_in : in std_logic_vector(127 downto 0); -- Incoming initial bytes from controller
+     sr_out : out block_state_type --Outgoing bytes array
   );
 end InvShiftRows;
 
 architecture Behavioral of InvShiftRows is 
-     type word_rows is array (0 to 3) of STD_LOGIC_VECTOR (31 downto 0); -- creates 4 arrays, one for each row
+     type word_rows is array (0 to 3) of STD_LOGIC_VECTOR (31 downto 0); -- creates 4 rows of 32 bits
      signal init_row : word_rows;
      signal final_shifted_row : word_rows;
+     signal bytes : block_state_type;
+     
 begin
+       bytes <= pack_state_array(sr_in);
+            
        -- Organize the bytes of the 4x4 array into 4 individual rows and concatinates them
-       init_row(0) <= state_bytes(0) & state_bytes(4) & state_bytes(8) & state_bytes(12);
-       init_row(1) <= state_bytes(1) & state_bytes(5) & state_bytes(9) & state_bytes(13);
-       init_row(2) <= state_bytes(2) & state_bytes(6) & state_bytes(10) & state_bytes(14);
-       init_row(3) <= state_bytes(3) & state_bytes(7) & state_bytes(11) & state_bytes(15);
+       init_row(0) <= bytes(0) & bytes(4) & bytes(8) & bytes(12);
+       init_row(1) <= bytes(1) & bytes(5) & bytes(9) & bytes(13);
+       init_row(2) <= bytes(2) & bytes(6) & bytes(10) & bytes(14);
+       init_row(3) <= bytes(3) & bytes(7) & bytes(11) & bytes(15);
 
-        -- row 0 doesnt get any shifts
-       final_shifted_row(0) <= init_row(0);
+       -- performs the shift rotations for each row
+       final_shifted_row(0) <= init_row(0); -- row 0 doesnt get any shifts
+       final_shifted_row(1) <= std_logic_vector(rotate_right(unsigned(init_row(1)), 8)); -- row 1 gets shifted right by 8 bits
+       final_shifted_row(2) <= std_logic_vector(rotate_right(unsigned(init_row(2)), 16)); -- row 2 gets shifted right by 16 bits 
+       final_shifted_row(3) <= std_logic_vector(rotate_right(unsigned(init_row(3)), 24)); -- row 3 gets shifted right by 24 bits
        
-       -- row 1 gets shifted right by 8 bits
-       final_shifted_row(1) <= std_logic_vector(rotate_right(unsigned(init_row(1)), 8));
-       
-       -- row 2 gets shifted right by 16 bits
-       final_shifted_row(2) <= std_logic_vector(rotate_right(unsigned(init_row(2)), 16));
+       -- reorganizes all 4 rows back into the proper state array but with final rotated values
+       final_state: for i in 0 to 3 generate
+            sr_out(i) <= final_shifted_row(i)(31 downto 24);
+            sr_out(i + 4) <= final_shifted_row(i)(23 downto 16);
+            sr_out(i + 8) <= final_shifted_row(i)(15 downto 8);
+            sr_out(i + 12) <= final_shifted_row(i)(7  downto 0);
+        end generate final_state;
 
-        -- row 3 gets shifted right by 24 bits
-       final_shifted_row(3) <= std_logic_vector(rotate_right(unsigned(init_row(3)), 24));
-       
-       
--- reorganizes all 4 rows back into the proper state array but with final rotated values
-final_state: for i in 0 to 3 generate
-    next_state_bytes(i)      <= final_shifted_row(i)(31 downto 24);
-    
-    next_state_bytes(i + 4)  <= final_shifted_row(i)(23 downto 16);
-    
-    next_state_bytes(i + 8)  <= final_shifted_row(i)(15 downto 8);
-    
-    next_state_bytes(i + 12) <= final_shifted_row(i)(7  downto 0);
-    
-  end generate final_state;
-  
 end Behavioral;

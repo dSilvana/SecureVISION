@@ -23,9 +23,8 @@ use IEEE.NUMERIC_STD.ALL;
 use work.aes_package.all;
 
 entity InvSubBytes is
-  Port (INV_SBOX : in inv_sbox_type;
-        init_state_bytes : in block_state_type; -- Incoming bytes array
-        next_state_bytes : out block_state_type --Outgoing bytes array
+  Port (sb_in : in block_state_type; -- Incoming bytes array
+        sb_out : out block_state_type --Outgoing bytes array
         );
         
 end InvSubBytes;
@@ -34,14 +33,13 @@ architecture Behavioral of InvSubBytes is
 
 begin
 
-process(INV_SBOX, init_state_bytes)
+process(sb_in)
   variable index : integer range 0 to 255;
 begin 
     
     for i in 0 to 15 loop
-        index := to_integer(unsigned(init_state_bytes(i)));
-        
-        next_state_bytes(i) <= INV_SBOX(index);
+        index := to_integer(unsigned(sb_in(i)));
+        sb_out(i) <= INV_SBOX(index);
         
     end loop;
     
