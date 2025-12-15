@@ -48,7 +48,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 package aes_package is 
 
-    type state_type is array(0 to 15) of std_logic_vector(7 downto 0); 		-- AES block state: 16 bytes (4x4 byte matrix), each byte stored separately.
+    type block_state_type is array(0 to 15) of std_logic_vector(7 downto 0); 		-- AES block state: 16 bytes (4x4 byte matrix), each byte stored separately.
     type round_key_type is array(0 to 43) of std_logic_vector(31 downto 0); 	-- This stores all of the expanded round keys. 44 because 44 = 32 bits. Gets filled by key expansion. This is four words x (Nr + 1), NR = 10
 
     type sbox_type is array(0 to 255) of std_logic_vector(7 downto 0); 		-- Defines a new data type that is an array of 256 elements for the sbox. Each element is an 8 bit, 1 byte vector so every index in this array holds an 8-bit output
@@ -139,3 +139,4 @@ package body aes_package is
     end function;
 
 end package body aes_package;
+
