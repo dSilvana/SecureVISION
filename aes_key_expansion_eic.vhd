@@ -34,7 +34,7 @@ use work.aes_package.all;
 
 entity aes_key_expansion_eic is
     Port (
-        key_in      : in  std_logic_vector(127 downto 0);
+        key_in     : in  std_logic_vector(127 downto 0);
         eic_keys    : out round_key_type
     );
 end aes_key_expansion_eic;
@@ -67,7 +67,9 @@ architecture Behavioral of aes_key_expansion_eic is
         result(7 downto 0)   := SBOX(to_integer(unsigned(word_in(7 downto 0))));
         return result;
     end function;
-
+    
+    
+-------------------------------------------------------------------------------------------------
 -- This applies the inverse mix columns matrix to a 32 bit word that is treated as a column. Each column of the state is a word.
 
     function inv_mix_column_word(word_in : std_logic_vector(31 downto 0)) return std_logic_vector is
@@ -86,6 +88,7 @@ architecture Behavioral of aes_key_expansion_eic is
 
         return result;
     end function;
+--------------------------------------------------------------------------------
 
 begin
 

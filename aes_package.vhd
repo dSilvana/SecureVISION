@@ -50,7 +50,8 @@ package aes_package is
 
     type block_state_type is array(0 to 15) of std_logic_vector(7 downto 0); 		-- AES block state: 16 bytes (4x4 byte matrix), each byte stored separately.
     type round_key_type is array(0 to 43) of std_logic_vector(31 downto 0); 	-- This stores all of the expanded round keys. 44 because 44 = 32 bits. Gets filled by key expansion. This is four words x (Nr + 1), NR = 10
-
+    type round_key_128_array is array (0 to 10) of std_logic_vector(127 downto 0); 
+    
     type sbox_type is array(0 to 255) of std_logic_vector(7 downto 0); 		-- Defines a new data type that is an array of 256 elements for the sbox. Each element is an 8 bit, 1 byte vector so every index in this array holds an 8-bit output
     type inv_sbox_type is array(0 to 255) of std_logic_vector(7 downto 0);	-- Defines a new data type that is an array of 256 elements for the inverse sbox. Each element is an 8 bit, 1 byte vector so every index in this array holds an 8-bit output
 
@@ -97,9 +98,14 @@ package aes_package is
         x"17", x"2b", x"04", x"7e", x"ba", x"77", x"d6", x"26", x"e1", x"69", x"14", x"63", x"55", x"21", x"0c", x"7d"
     );
 
-
+    
+    
     function gf_mult(a, b : std_logic_vector(7 downto 0)) return std_logic_vector;   -- full GF(2^8) multiply used by MixColumns logic
     function xtime(a : std_logic_vector(7 downto 0)) return std_logic_vector;	  -- multiplies by 2 in GF(2^8)
+    function inv_mix_column_word(word_in : std_logic_vector(31 downto 0)) return std_logic_vector;
+    function pack_state_array(vector : std_logic_vector(127 downto 0)) return block_state_type;
+    function unpack_state_array(state_array : block_state_type) return std_logic_vector;
+    function separate_round_keys(eic_keys : round_key_type) return round_key_128_array; 
 
 end package aes_package;
 
@@ -138,5 +144,57 @@ package body aes_package is
         return result;
     end function;
 
-end package body aes_package;
+-- This applies the inverse mix columns matrix to a 32 bit word that is treated as a column. Each column of the state is a word.
 
+    function inv_mix_column_word(word_in : std_logic_vector(31 downto 0)) return std_logic_vector is
+        variable s0, s1, s2, s3 : std_logic_vector(7 downto 0);
+        variable result : std_logic_vector(31 downto 0);
+    begin
+        s0 := word_in(31 downto 24);
+        s1 := word_in(23 downto 16);
+        s2 := word_in(15 downto 8);
+        s3 := word_in(7 downto 0);
+
+        result(31 downto 24) := gf_mult(x"0e", s0) xor gf_mult(x"0b", s1) xor gf_mult(x"0d", s2) xor gf_mult(x"09", s3);
+        result(23 downto 16) := gf_mult(x"09", s0) xor gf_mult(x"0e", s1) xor gf_mult(x"0b", s2) xor gf_mult(x"0d", s3);
+        result(15 downto 8)  := gf_mult(x"0d", s0) xor gf_mult(x"09", s1) xor gf_mult(x"0e", s2) xor gf_mult(x"0b", s3);
+        result(7 downto 0)   := gf_mult(x"0b", s0) xor gf_mult(x"0d", s1) xor gf_mult(x"09", s2) xor gf_mult(x"0e", s3);
+
+        return result;
+    end function;
+
+
+    -- converts vector into array or 16 bytes
+    function pack_state_array(vector : STD_LOGIC_VECTOR (127 downto 0)) return block_state_type is 
+        variable state_array : block_state_type;
+    begin
+        for i in 0 to 15 loop
+            state_array(i) := vector(127 - 8*i downto 120 - 8*i);
+        end loop;
+            return state_array;
+    end function;
+
+
+    --unpacks array into a vector
+    function unpack_state_array(state_array : block_state_type) return std_logic_vector is
+        variable vector : std_logic_vector(127 downto 0);
+    begin
+        for i in 0 to 15 loop
+            vector(127 - 8*i downto 120 - 8*i) := state_array(i);
+        end loop;
+            return vector;
+    end function;        
+
+
+    -- converts eic_keys words into 11 ( 128 bit round keys )
+    function separate_round_keys(eic_keys : round_key_type) return round_key_128_array is
+        variable round_key : round_key_128_array;
+    begin 
+        for i in 0 to 10 loop
+            round_key(i) := eic_keys(i*4) & eic_keys((i*4)+ 1) & eic_keys((i*4)+ 2) & eic_keys((i*4)+ 3);
+        end loop;
+            return round_key;
+        end function;
+
+
+end package body aes_package;
