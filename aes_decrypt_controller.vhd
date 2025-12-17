@@ -1,20 +1,3 @@
-----------------------------------------------------------------------------------
--- Engineer: Daniella Li Calzi
--- 
--- Create Date: 10/17/2025 12:50:22 AM
--- Module Name: aes_decrypt_controller - Behavioral
--- Project Name: SecureVISION 
--- Target Devices: Zybo Z7-020
--- Tool Versions: Vivado 2020.2
--- Description: top-level AES controller
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
 
 
 library IEEE;
@@ -34,7 +17,6 @@ entity aes_decrypt_controller is
            aes_decrypt_done : out STD_LOGIC;
            
            key_in : in std_logic_vector(127 downto 0);
-           byte_reg_value : out STD_LOGIC_VECTOR (127 downto 0);
            
            -- Text input and output          
            ciphertext_in : in STD_LOGIC_VECTOR (127 downto 0); --ciphertext
@@ -47,7 +29,6 @@ architecture Behavioral of aes_decrypt_controller is
 
     signal rounds_counter : integer range 0 to 10;
     
-    
     signal byte_reg : std_logic_vector(127 downto 0); -- stores current state bytes value
     signal byte_next : std_logic_vector(127 downto 0);  -- stores next state bytes value after transformations
     
@@ -56,18 +37,16 @@ architecture Behavioral of aes_decrypt_controller is
     
     -- Signals for InvMixColumns
     signal mxc_out : std_logic_vector(127 downto 0); --invmixcolumns output bytes
-    signal mxc_in   : std_logic_vector(127 downto 0);
     
     -- Signals for AddRoundKey
     signal round_key : round_key_128_array; 
     signal addrk_out : std_logic_vector(127 downto 0); --addroundkey input bytes
-    -- signal addrk_in : std_logic_vector(127 downto 0);
+    signal addrk_reg : std_logic_vector(127 downto 0); 
     
     -- Signals for InvShiftRows
     signal sr_out : block_state_type;
     
     -- Signals for InvSubBytes
-    signal sb_in : block_state_type;
     signal sb_out : block_state_type;
     
     
@@ -99,13 +78,14 @@ begin
             sb_out => sb_out
     );
 
---    -- Instantiates AddRoundKey
---    inst_AddRoundKey : entity work.AddRoundKey
---    port map (
---            round_key => round_key,
---            addrk_in => sb_out,
---            addrk_out => addrk_out
---    );
+    -- Instantiates AddRoundKey
+    inst_AddRoundKey : entity work.AddRoundKey
+    port map (
+            round_key => round_key,
+            round_sel => rounds_counter,
+            addrk_in => sb_out,
+            addrk_out => addrk_out
+    );
     
     -- Instantiates InvMixColumns
     inst_InvMixColumns : entity work.InvMixColumns
@@ -115,34 +95,37 @@ begin
     );
 
 -- State Register
-
-process (clk, reset)
+process (clk)
     begin
-        if reset = '1' then
-            current_state <= idle;
-            byte_next <= (others => '0');
-            byte_reg <= (others => '0');
-            rounds_counter <= 0;
-        elsif rising_edge(clk) then
+        if rising_edge(clk) then
             current_state <= next_state;
             byte_reg <= byte_next;
-            if current_state = rounds then
+            
+            if (current_state = rounds) and (rounds_counter > 0) then
                 rounds_counter <= rounds_counter - 1;
-            elsif current_state = idle then
+                
+            elsif (current_state = idle) or (current_state = complete) then
                 rounds_counter <= 9;   
+                
             end if;
+            
         end if;
     end process;
     
 -- FSM for entire AES Decryption
-process (current_state, start, key_ready, ciphertext_ready, ciphertext_in, eic_keys, rounds_counter, byte_reg, sb_out)
+process (all)
     begin
         
-        next_state <= current_state;
-        aes_decrypt_done <= '0';
-        byte_next <= byte_reg;
-        addrk_out <= (others => '0');
-        
+       if reset = '1' then
+            next_state <= idle;
+            aes_decrypt_done <= '0';
+            byte_next <= (others => '0');
+        else
+            next_state <= current_state;
+            aes_decrypt_done <= '0';
+            byte_next <= byte_reg;
+            
+            
         case current_state is
         
             when idle =>
@@ -158,25 +141,23 @@ process (current_state, start, key_ready, ciphertext_ready, ciphertext_in, eic_k
             when key_expand =>
                
                round_key <= separate_round_keys(eic_keys);
-               byte_reg_value <= byte_reg;
                if (key_ready = '1') then
                     next_state <= init;
                 end if;
                 
             when init => 
                 
-                -- Take ciphertext state and XOR with the last round key
-                byte_next <= byte_reg XOR round_key(10);
+                -- Takes ciphertext state and XOR with the last round key
+                addrk_reg <= byte_reg XOR round_key(10);
+                byte_next <= addrk_reg;
+                
                 next_state <= rounds;
             
             
             when rounds =>
-                
                 -- InvShiftRows > InvSubBytes > AddRoundKey(round_key(round)) > InvMixColumns
                 -- uses round keys 9 down to 1
                 if rounds_counter > 0 then
-                    addrk_out <= unpack_state_array(sb_out) xor round_key(rounds_counter);
-                    
                     byte_next <= mxc_out;
                 end if;
                 
@@ -189,8 +170,8 @@ process (current_state, start, key_ready, ciphertext_ready, ciphertext_in, eic_k
                 next_state <= complete;
              
             when complete =>
-                plaintext_out <= byte_reg;
                 aes_decrypt_done <= '1';
+                plaintext_out <= byte_reg;
                 
                 if start = '0' then
                     next_state <= idle;
@@ -199,7 +180,9 @@ process (current_state, start, key_ready, ciphertext_ready, ciphertext_in, eic_k
             
                 
      end case;
+     
+     end if;
+     
 end process;
 
 end Behavioral;
-
