@@ -36,7 +36,6 @@ architecture Behavioral of aes_decrypt_controller_tb is
     signal key_in : std_logic_vector(127 downto 0) := (others => '0'); 
     signal ciphertext_in : STD_LOGIC_VECTOR (127 downto 0) := (others => '0');
     signal plaintext_out : STD_LOGIC_VECTOR (127 downto 0); 
-    signal byte_reg_value : STD_LOGIC_VECTOR (127 downto 0);
     
     constant CLK_PERIOD : time := 10 ns;
     
@@ -51,11 +50,10 @@ architecture Behavioral of aes_decrypt_controller_tb is
            aes_decrypt_done : out STD_LOGIC;
            
            key_in : in std_logic_vector(127 downto 0);
-           byte_reg_value : out STD_LOGIC_VECTOR (127 downto 0);
            
            -- Text input and output          
-           ciphertext_in : in STD_LOGIC_VECTOR (127 downto 0); --ciphertext
-           plaintext_out : out STD_LOGIC_VECTOR (127 downto 0)); --plaintext
+           ciphertext_in : in STD_LOGIC_VECTOR (127 downto 0):= (others => '0'); --ciphertext
+           plaintext_out : out STD_LOGIC_VECTOR (127 downto 0):= (others => '0')); --plaintext
            
     end component;
    
@@ -72,23 +70,26 @@ begin
            aes_decrypt_done => aes_decrypt_done,
            key_in => key_in,   
            ciphertext_in => ciphertext_in,
-           plaintext_out => plaintext_out,
-           byte_reg_value => byte_reg_value
+           plaintext_out => plaintext_out
         );
         
     stim : process
     begin
   
         reset <= '1';
+        wait until rising_edge(clk);
+        
         start <= '0';
         key_ready <= '0';
         ciphertext_ready <= '0';
         wait until rising_edge(clk);
         
         key_in <= x"2b7e151628aed2a6abf7158809cf4f3c";
-        ciphertext_in <= x"3925841d02dc09fbdc118597196a0b32";
+        ciphertext_in <= x"3ad77bb40d7a3660a89ecaf32466ef97";
         
         reset <= '0';
+        wait until rising_edge(clk);
+        
         start <= '1';
         ciphertext_ready <= '1';
         wait until rising_edge(clk);
@@ -99,13 +100,13 @@ begin
         start <= '0';
         ciphertext_ready <= '0';
         key_ready <= '0';
-        --wait for 1 * CLK_PERIOD;
+        wait until rising_edge(clk);
         
         wait until aes_decrypt_done = '1';
             report "done decryption";
             
        
-        if plaintext_out = x"3243f6a8885a308d313198a2e0370734" then
+        if plaintext_out = x"6bc1bee22e409f96e93d7e117393172a" then
             report "Correct plaintext output";
         else 
             report "Wrong plaintext output";
