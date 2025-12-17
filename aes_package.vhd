@@ -106,7 +106,7 @@ package aes_package is
     function pack_state_array(vector : std_logic_vector(127 downto 0)) return block_state_type;
     function unpack_state_array(state_array : block_state_type) return std_logic_vector;
     function separate_round_keys(eic_keys : round_key_type) return round_key_128_array; 
-
+    
 end package aes_package;
 
 package body aes_package is
@@ -164,26 +164,25 @@ package body aes_package is
     end function;
 
 
-    -- converts vector into array or 16 bytes
-    function pack_state_array(vector : STD_LOGIC_VECTOR (127 downto 0)) return block_state_type is 
-        variable state_array : block_state_type;
-    begin
-        for i in 0 to 15 loop
-            state_array(i) := vector(127 - 8*i downto 120 - 8*i);
-        end loop;
-            return state_array;
-    end function;
-
-
-    --unpacks array into a vector
+    --unpacks 16 bytes array into a 128 bit vector
     function unpack_state_array(state_array : block_state_type) return std_logic_vector is
         variable vector : std_logic_vector(127 downto 0);
     begin
         for i in 0 to 15 loop
             vector(127 - 8*i downto 120 - 8*i) := state_array(i);
         end loop;
-            return vector;
-    end function;        
+        return vector;
+    end function;
+
+    -- converts vector into array of 16 bytes
+    function pack_state_array(vector : std_logic_vector(127 downto 0)) return block_state_type is
+        variable state_array : block_state_type;
+    begin
+        for i in 0 to 15 loop
+            state_array(i) := vector(127 - 8*i downto 120 - 8*i);
+        end loop;
+        return state_array;
+    end function; 
 
 
     -- converts eic_keys words into 11 ( 128 bit round keys )
@@ -195,6 +194,6 @@ package body aes_package is
         end loop;
             return round_key;
         end function;
-
+        
 
 end package body aes_package;

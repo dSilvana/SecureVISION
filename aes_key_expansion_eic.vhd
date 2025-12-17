@@ -36,6 +36,7 @@ entity aes_key_expansion_eic is
     Port (
         key_in     : in  std_logic_vector(127 downto 0);
         eic_keys    : out round_key_type
+        --enc_keys    : out round_key_type -- outputs w for testing and future use
     );
 end aes_key_expansion_eic;
 
@@ -69,26 +70,26 @@ architecture Behavioral of aes_key_expansion_eic is
     end function;
     
     
--------------------------------------------------------------------------------------------------
--- This applies the inverse mix columns matrix to a 32 bit word that is treated as a column. Each column of the state is a word.
+---------------------------------------------------------------------------------------------------
+---- This applies the inverse mix columns matrix to a 32 bit word that is treated as a column. Each column of the state is a word.
 
-    function inv_mix_column_word(word_in : std_logic_vector(31 downto 0)) return std_logic_vector is
-        variable s0, s1, s2, s3 : std_logic_vector(7 downto 0);
-        variable result : std_logic_vector(31 downto 0);
-    begin
-        s0 := word_in(31 downto 24);
-        s1 := word_in(23 downto 16);
-        s2 := word_in(15 downto 8);
-        s3 := word_in(7 downto 0);
+--    function inv_mix_column_word(word_in : std_logic_vector(31 downto 0)) return std_logic_vector is
+--        variable s0, s1, s2, s3 : std_logic_vector(7 downto 0);
+--        variable result : std_logic_vector(31 downto 0);
+--    begin
+--        s0 := word_in(31 downto 24);
+--        s1 := word_in(23 downto 16);
+--        s2 := word_in(15 downto 8);
+--        s3 := word_in(7 downto 0);
 
-        result(31 downto 24) := gf_mult(x"0e", s0) xor gf_mult(x"0b", s1) xor gf_mult(x"0d", s2) xor gf_mult(x"09", s3);
-        result(23 downto 16) := gf_mult(x"09", s0) xor gf_mult(x"0e", s1) xor gf_mult(x"0b", s2) xor gf_mult(x"0d", s3);
-        result(15 downto 8)  := gf_mult(x"0d", s0) xor gf_mult(x"09", s1) xor gf_mult(x"0e", s2) xor gf_mult(x"0b", s3);
-        result(7 downto 0)   := gf_mult(x"0b", s0) xor gf_mult(x"0d", s1) xor gf_mult(x"09", s2) xor gf_mult(x"0e", s3);
+--        result(31 downto 24) := gf_mult(x"0e", s0) xor gf_mult(x"0b", s1) xor gf_mult(x"0d", s2) xor gf_mult(x"09", s3);
+--        result(23 downto 16) := gf_mult(x"09", s0) xor gf_mult(x"0e", s1) xor gf_mult(x"0b", s2) xor gf_mult(x"0d", s3);
+--        result(15 downto 8)  := gf_mult(x"0d", s0) xor gf_mult(x"09", s1) xor gf_mult(x"0e", s2) xor gf_mult(x"0b", s3);
+--        result(7 downto 0)   := gf_mult(x"0b", s0) xor gf_mult(x"0d", s1) xor gf_mult(x"09", s2) xor gf_mult(x"0e", s3);
 
-        return result;
-    end function;
---------------------------------------------------------------------------------
+--        return result;
+--    end function;
+----------------------------------------------------------------------------------
 
 begin
 
@@ -97,7 +98,7 @@ begin
 
     process(key_in)
         variable w : round_key_type;
-        variable dw : round_key_type;
+        --variable dw : round_key_type;
         variable temp : std_logic_vector(31 downto 0);
     begin
 
@@ -122,30 +123,31 @@ begin
             w(i) := w(i - 4) xor temp;
         end loop;
 
--- These are the dw for the Equivalent Inverse Cipher. 
--- The first and last round keys are the same in dw and w here
--- Stores the first 4 words and the last 4 words for decryption-specific key expansion
+---- These are the dw for the Equivalent Inverse Cipher. 
+---- The first and last round keys are the same in dw and w here
+---- Stores the first 4 words and the last 4 words for decryption-specific key expansion
 
-        dw(0)  := w(0);
-        dw(1)  := w(1);
-        dw(2)  := w(2);
-        dw(3)  := w(3);
-        dw(40) := w(40);
-        dw(41) := w(41);
-        dw(42) := w(42);
-        dw(43) := w(43);
+--        dw(0)  := w(0);
+--        dw(1)  := w(1);
+--        dw(2)  := w(2);
+--        dw(3)  := w(3);
+--        dw(40) := w(40);
+--        dw(41) := w(41);
+--        dw(42) := w(42);
+--        dw(43) := w(43);
 
--- Applies inverse MixColumns to the remaining round keys (for decryption)
--- for internal rounds 1..9, apply InvMixColumns to each round key to produce dw. 
--- The round keys are pre-mixed to keep the one matrix per round structure.
+---- Applies inverse MixColumns to the remaining round keys (for decryption)
+---- for internal rounds 1..9, apply InvMixColumns to each round key to produce dw. 
+---- The round keys are pre-mixed to keep the one matrix per round structure.
 
-        for round in 1 to 9 loop
-            for i in 0 to 3 loop
-                dw(round * 4 + i) := inv_mix_column_word(w(round * 4 + i));
-            end loop;
-        end loop;
-
-        eic_keys <= dw; -- Outputs the expanded round keys for decryption
+--        for round in 1 to 9 loop
+--            for i in 0 to 3 loop
+--                dw(round * 4 + i) := inv_mix_column_word(w(round * 4 + i));
+--            end loop;
+--        end loop;
+        
+       --enc_keys <= w;   -- Outputs forward round keys
+        eic_keys <= w; -- Outputs the expanded round keys for decryption
     end process;
 
 end Behavioral;
