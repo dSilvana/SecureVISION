@@ -35,7 +35,7 @@ architecture Behavioral of aes_decrypt_controller_tb is
     signal aes_decrypt_done : STD_LOGIC;  
     signal key_in : std_logic_vector(127 downto 0) := (others => '0'); 
     signal ciphertext_in : STD_LOGIC_VECTOR (127 downto 0) := (others => '0');
-    signal plaintext_out : STD_LOGIC_VECTOR (127 downto 0); 
+    signal plaintext_out : STD_LOGIC_VECTOR (127 downto 0):= (others => '0'); 
     
     constant CLK_PERIOD : time := 10 ns;
     
@@ -75,9 +75,9 @@ begin
         
     stim : process
     begin
-  
-        reset <= '1';
         wait until rising_edge(clk);
+        reset <= '1';
+        
         
         start <= '0';
         key_ready <= '0';
