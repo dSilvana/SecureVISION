@@ -24,8 +24,8 @@ create_clock -period 8.000 -name sys_clk_pin -waveform {0.000 4.000} -add [get_p
 
 
 ##LEDs
-set_property -dict { PACKAGE_PIN M14   IOSTANDARD LVCMOS33 } [get_ports { alarm }]; #IO_L23P_T3_35 Sch=led[0]
-#set_property -dict { PACKAGE_PIN M15   IOSTANDARD LVCMOS33 } [get_ports { led[1] }]; #IO_L23N_T3_35 Sch=led[1]
+set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS18} [get_ports alarm_over]
+set_property -dict {PACKAGE_PIN M15 IOSTANDARD LVCMOS18} [get_ports alarm_under]
 #set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { led[2] }]; #IO_0_35 Sch=led[2]
 #set_property -dict { PACKAGE_PIN D18   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]; #IO_L3N_T0_DQS_AD1N_35 Sch=led[3]
 
@@ -235,3 +235,31 @@ connect_debug_port u_ila_0/probe2 [get_nets [list drdy_out]]
 connect_debug_port u_ila_0/probe3 [get_nets [list {normal_voltage[11]_i_1_n_0}]]
 connect_debug_port dbg_hub/clk [get_nets clk_IBUF_BUFG]
 
+
+
+create_debug_core u_ila_0 ila
+set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
+set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
+set_property C_ADV_TRIGGER false [get_debug_cores u_ila_0]
+set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
+set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
+set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
+set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
+set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
+set_property port_width 1 [get_debug_ports u_ila_0/clk]
+connect_debug_port u_ila_0/clk [get_nets [list clk_IBUF_BUFG]]
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
+set_property port_width 16 [get_debug_ports u_ila_0/probe0]
+connect_debug_port u_ila_0/probe0 [get_nets [list {do_out[0]} {do_out[1]} {do_out[2]} {do_out[3]} {do_out[4]} {do_out[5]} {do_out[6]} {do_out[7]} {do_out[8]} {do_out[9]} {do_out[10]} {do_out[11]} {do_out[12]} {do_out[13]} {do_out[14]} {do_out[15]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
+set_property port_width 12 [get_debug_ports u_ila_0/probe1]
+connect_debug_port u_ila_0/probe1 [get_nets [list {normal_voltage[0]} {normal_voltage[1]} {normal_voltage[2]} {normal_voltage[3]} {normal_voltage[4]} {normal_voltage[5]} {normal_voltage[6]} {normal_voltage[7]} {normal_voltage[8]} {normal_voltage[9]} {normal_voltage[10]} {normal_voltage[11]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
+set_property port_width 1 [get_debug_ports u_ila_0/probe2]
+connect_debug_port u_ila_0/probe2 [get_nets [list drdy_out]]
+set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
+set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
+set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
+connect_debug_port dbg_hub/clk [get_nets clk_IBUF_BUFG]
