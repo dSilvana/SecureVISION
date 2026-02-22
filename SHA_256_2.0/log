@@ -1,0 +1,2 @@
+Added a ready_for_block output that is 1 only when sha_256_core is idle and will accept a new msg_block on the next rising edge, and a block_done pulse when it finishes a block.
+Created a testbench to test that this is working
