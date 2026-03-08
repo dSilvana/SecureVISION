@@ -1,0 +1,16 @@
+int main()
+{
+    FILE *fp;
+
+    char buffer[128]= {0};
+
+    f_mount(fp, "D:\\best_int8_dynamic.onnx",0)
+    
+    f_open(fp, "D:\\best_int8_dynamic.onnx", "r");
+
+    f_gets(TCHAR *buffer, int len, FIL *fp)
+
+    f_close(FIL *fp)
+
+    return 0;
+}
