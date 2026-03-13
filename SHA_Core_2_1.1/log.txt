@@ -1,0 +1,1 @@
+Updated port names and condensed files to make the SHA core by DoIt easier to work with/integrate
