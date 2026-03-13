@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------
 -- Author: SecureVision Team 14
 -- Created testbench
--- Updated port names for better labling
+-- Updated port names for better labeling
 --
 -- Testbench: hashes 80 bytes of ASCII 'a' using 128-bit block input
 -- checks wrapper pass/fail and prints the digest.
@@ -141,5 +141,6 @@ begin
 
     wait;
   end process;
+
 
 end architecture;
