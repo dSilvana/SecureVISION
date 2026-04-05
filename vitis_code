@@ -1,21 +1,9 @@
 
-#include "ffconf.h"
-#include <stdio.h>
-#include "stdio.h"
-#include "ff.c"
-#include "fsbl.h"
-#include "qspi.h"
-#include "nand.h"
-#include "nor.h"
-#include "sd.h"
-#include "pcap.h"
-#include "image_mover.h"
-#include "xparameters.h"
-#include "xil_cache.h"
-#include "xil_exception.h"
-#include "xstatus.h"
-#include "fsbl_hooks.h"
-#include "xtime_l.h"
+
+
+
+#include "ff.h"
+#include "xil_io.h"
 
 
 
@@ -36,6 +24,8 @@ int main(void)
 	    f_read(&SD_file, &buffer, 128, FR_OK);
 
 	    Xil_Out32(0x41200000, *buffer);
+
+	    f_close(&SD_file);
 
 	return 0;
 }
