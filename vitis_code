@@ -1,16 +1,42 @@
+
+#include "ffconf.h"
+#include <stdio.h>
+#include "stdio.h"
+#include "ff.c"
+#include "fsbl.h"
+#include "qspi.h"
+#include "nand.h"
+#include "nor.h"
+#include "sd.h"
+#include "pcap.h"
+#include "image_mover.h"
+#include "xparameters.h"
+#include "xil_cache.h"
+#include "xil_exception.h"
+#include "xstatus.h"
+#include "fsbl_hooks.h"
+#include "xtime_l.h"
+
+
+
 int main(void)
 {
-	 FILE *fp;
+		FATFS mount_space;
+		FIL SD_file;
 
-	    char buffer[128]= {0};
 
-	    f_mount(fp, "D:\\best_int8_dynamic.onnx",0);
 
-	    f_open(fp, "D:\\best_int8_dynamic.onnx", "r");
+	    BYTE buffer[128]= {0};
 
-	    f_read(*fp, *buffer, 128, 128);
+	    f_mount(&mount_space, "D:\\best_int8_dynamic.onnx",0);
+
+
+	    f_open(&SD_file, "D:\\best_int8_dynamic.onnx", FA_READ);
+
+	    f_read(&SD_file, &buffer, 128, FR_OK);
 
 	    Xil_Out32(0x41200000, *buffer);
 
 	return 0;
 }
+
