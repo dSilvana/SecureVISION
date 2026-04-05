@@ -27,6 +27,8 @@ int main(void)
 
 	    f_close(&SD_file);
 
+	    f_unmount("D:\\best_int8_dynamic.onnx");
+
 	return 0;
 }
 
